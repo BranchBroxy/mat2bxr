@@ -89,8 +89,17 @@ for a in range(0, spike_list.shape[0]):
 vec1 =  np.array(spikes1, dtype=object)
 vec2 = np.array(spikes2, dtype=object)
 
+vec1 = vec1.astype(str).astype(float)
+vec2 = vec2.astype(str).astype(int)
 
-with h5py.File("mytestfile.bxr", "w") as f:
+mea_layout = np.ones(shape=(8, 8))
+mea_type = 1024
+mea_ncols = 8
+mea_nrows = 8
+sys_chs = np.ones(shape=(1, 1))
+ch2ind = np.array(bxr_data.data["3BRecInfo/3BMeaStreams/Raw/Chs"][0:456])
+
+with h5py.File("TS2bxr.bxr", "w") as f:
     rec_info_grp = f.create_group("3BRecInfo")
     results_grp = f.create_group("3BResults")
     user_info_grp = f.create_group("3BUserInfo")
@@ -105,15 +114,15 @@ with h5py.File("mytestfile.bxr", "w") as f:
     rec_info_rec_vars = rec_info_grp.create_group("3BRecVars")
     rec_info_source_info = rec_info_grp.create_group("3BSourceInfo")
 
-    rec_info_mea_info_layout = rec_info_mea_chip.create_dataset("Layout", (64, 64), dtype='|u1')
-    rec_info_mea_info_meatype = rec_info_mea_chip.create_dataset("MeaType", (1,), dtype='i4')
-    rec_info_mea_info_ncols = rec_info_mea_chip.create_dataset("NCols", (1,), dtype='u4')
-    rec_info_mea_info_nrows = rec_info_mea_chip.create_dataset("NRows", (1,), dtype='u4')
+    rec_info_mea_info_layout = rec_info_mea_chip.create_dataset("Layout", data=mea_layout, dtype='|u1')
+    rec_info_mea_info_meatype = rec_info_mea_chip.create_dataset("MeaType", data=mea_type, dtype='i4')
+    rec_info_mea_info_ncols = rec_info_mea_chip.create_dataset("NCols", data=mea_ncols, dtype='u4')
+    rec_info_mea_info_nrows = rec_info_mea_chip.create_dataset("NRows", data=mea_nrows, dtype='u4')
     rec_info_mea_info_rois = rec_info_mea_chip.create_dataset("ROIs", (0,), dtype='|V52')
-    rec_info_mea_info_syschs = rec_info_mea_chip.create_dataset("SysChs", (1,), dtype='|V4')
+    rec_info_mea_info_syschs = rec_info_mea_chip.create_dataset("SysChs", data=sys_chs)
 
     rec_info_mea_streams_raw = rec_info_mea_streams.create_group("Raw")
-    rec_info_mea_streams_raw_chs = rec_info_mea_streams_raw.create_dataset("Chs", (4096,), dtype='|V4')
+    rec_info_mea_streams_raw_chs = rec_info_mea_streams_raw.create_dataset("Chs", data=ch2ind)
 
     rec_info_mea_systems_fwversion = rec_info_mea_systems.create_dataset("FwVersion", (1,), dtype='|V16')
     rec_info_mea_systems_hwversion = rec_info_mea_systems.create_dataset("HwVersion", (1,), dtype='|V16')
@@ -137,10 +146,9 @@ with h5py.File("mytestfile.bxr", "w") as f:
 
     results_ch_events = results_grp.create_group("3BChEvents")
     results_info = results_grp.create_group("3BInfo")
-
-    results_ch_events_lfp_ch_ids = results_ch_events.create_dataset("LfpChIDs", (26169,), dtype='u2')
+    results_ch_events_lfp_ch_ids = results_ch_events.create_dataset("LfpChIDs", data=vec2)
     results_ch_events_lfp_forms = results_ch_events.create_dataset("LfpForms", (47339721,), dtype='i2')
-    results_ch_events_lfp_LfpTimes = results_ch_events.create_dataset("LfpTimes", (26169,), dtype='i8')
+    results_ch_events_lfp_LfpTimes = results_ch_events.create_dataset("LfpTimes", data=vec1)
 
     results_info_lfps = results_info.create_group("3BLFPs")
 
