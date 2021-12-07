@@ -133,7 +133,7 @@ with h5py.File("TS2bxr.bxr", "w") as f:
     rec_info_mea_vars_maxvolt = rec_info_rec_vars.create_dataset("MaxVolt", (1,), dtype='f8')
     rec_info_mea_vars_mivolt = rec_info_rec_vars.create_dataset("MinVolt", (1,), dtype='f8')
     rec_info_mea_vars_nrecframes = rec_info_rec_vars.create_dataset("NRecFrames", (1,), dtype='i8')
-    rec_info_mea_vars_samplingrate = rec_info_rec_vars.create_dataset("SamplingRate", (1,), dtype='f8')
+    rec_info_mea_vars_samplingrate = rec_info_rec_vars.create_dataset("SamplingRate", data=SaRa, dtype='f8')
     rec_info_mea_vars_signalinversion = rec_info_rec_vars.create_dataset("SignalInversion", (1,), dtype='f8')
 
     rec_info_mea_source_info_format = rec_info_source_info.create_dataset("Format", (), dtype='i4')
@@ -186,7 +186,7 @@ with h5py.File("TS2bxr.bxr", "w") as f:
 
 
 print(f.name)
-test = h5py.File("mytestfile.bxr", 'r')
+test = h5py.File("TS2bxr.bxr", 'r')
 print(f.name)
 # spike_list = convert_to_elephant_array_bxr(bxr_data)
 # bxr_data.data['3BRecInfo'].keys()
