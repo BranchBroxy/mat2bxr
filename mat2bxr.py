@@ -98,6 +98,12 @@ mea_ncols = 8
 mea_nrows = 8
 sys_chs = np.ones(shape=(1, 1))
 ch2ind = np.array(bxr_data.data["3BRecInfo/3BMeaStreams/Raw/Chs"][0:456])
+SampleRate = np.ones(shape=(1,), dtype="f8")
+SampleRate[0] = SaRa
+n_rec_frames_float = int(rec_dur) * int(SaRa)
+n_rec_frames = np.ones(shape=(1,), dtype="i8")
+n_rec_frames[0] = n_rec_frames_float
+# n_rec_frames = np.array([n_rec_frames], dtype=[('T','<i8')])
 
 with h5py.File("TS2bxr.bxr", "w") as f:
     rec_info_grp = f.create_group("3BRecInfo")
@@ -132,8 +138,8 @@ with h5py.File("TS2bxr.bxr", "w") as f:
     rec_info_mea_vars_experimenttype = rec_info_rec_vars.create_dataset("ExperimentType", (1,), dtype='i4')
     rec_info_mea_vars_maxvolt = rec_info_rec_vars.create_dataset("MaxVolt", (1,), dtype='f8')
     rec_info_mea_vars_mivolt = rec_info_rec_vars.create_dataset("MinVolt", (1,), dtype='f8')
-    rec_info_mea_vars_nrecframes = rec_info_rec_vars.create_dataset("NRecFrames", (1,), dtype='i8')
-    rec_info_mea_vars_samplingrate = rec_info_rec_vars.create_dataset("SamplingRate", data=SaRa, dtype='f8')
+    rec_info_mea_vars_nrecframes = rec_info_rec_vars.create_dataset("NRecFrames", data=n_rec_frames)
+    rec_info_mea_vars_samplingrate = rec_info_rec_vars.create_dataset("SamplingRate", data=SampleRate, dtype='f8')
     rec_info_mea_vars_signalinversion = rec_info_rec_vars.create_dataset("SignalInversion", (1,), dtype='f8')
 
     rec_info_mea_source_info_format = rec_info_source_info.create_dataset("Format", (), dtype='i4')
