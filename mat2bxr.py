@@ -244,6 +244,15 @@ with h5py.File("TS2bxr.bxr", "w") as f:
     results_grp = f.create_group("3BResults")
     user_info_grp = f.create_group("3BUserInfo")
 
+    # f.AttributeManager.create(name="Description", data=b'BXR-File Level2 - 3Brain eXperiment Results file for high resolution MEA platform, HDF5-format - Created with BrainWave v.4.4.7998.22458 on date Wednesday, December 1, 2021')
+    # f.AttributeManager.create(name="GUID", data=b'982c7143-2982-4624-b8c3-4593b93fd330')
+    # f.AttributeManager.create(name="Version", data=211)
+    # < KeysViewHDF5['Description', 'GUID', 'Version'] >
+
+    f.attrs["Version"] = 211
+    f.attrs["Description"] = b'BXR-File Level2 - 3Brain eXperiment Results file for high resolution MEA platform, HDF5-format - Created with BrainWave v.4.4.7998.22458 on date Wednesday, December 1, 2021'
+    f.attrs["GUID"] = b'982c7143-2982-4624-b8c3-4593b93fd330'
+
     #########################################################
     ####################3BRecInfo############################
     #########################################################
