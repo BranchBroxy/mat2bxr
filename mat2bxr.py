@@ -111,7 +111,7 @@ V16 = np.dtype([('Major', '<i4'), ('Minor', '<i4'), ('Build', '<i4'), ('Revision
 V28 = np.dtype([('Algorithm', '<i4'), ('HighThreshold', '<f8'), ('LowThreshold', '<f8'), ('WindowLength', '<f4'), ('RefractoryPeriod', '<f4')])
 V12 = np.dtype([('Row', '<i2'), ('Col', '<i2'), ('Std', '<f4'), ('Mean', '<f4')])
 V8 = np.dtype([('Row', '<i2'), ('Col', '<i2'), ('ID','>i4')])
-V16_2 = np.dtype([[('Title', h5py.special_dtype(vlen=str)), ('Value', h5py.special_dtype(vlen=str))]])
+V16_2 = np.dtype([('Title', h5py.special_dtype(vlen=str)), ('Value', h5py.special_dtype(vlen=str))])
 V92 = np.dtype({'names':['Type', 'Name', 'Color', 'ZOrder', 'IsVisible', 'Opacity', 'Data', 'Transform', 'Mask', 'IsMaskDisabled'],
                 'formats':['<i4',
                             'O',
@@ -142,7 +142,7 @@ mea_nrows = 64
 sys_chs = np.ones(shape=(1, 1), dtype=V4)
 
 # 3BRecInfo/3BMeaStreams/Raw/V4
-raw_chs = np.array(bxr_data.data['3BRecInfo/3BMeaStreams/Raw/V4'])
+#raw_chs = np.array(bxr_data.data['3BRecInfo/3BMeaStreams/Raw/V4'])
 
 # 3BRecInfo/3BMeaSystem
 # @TODO: Bug in FwVersion and HwVersion
@@ -211,7 +211,7 @@ TimeIntervals = np.empty(shape=(1,), dtype=V36)
 # End of Data #
 ###############
 
-ch2ind = np.array(bxr_data.data["3BRecInfo/3BMeaStreams/Raw/V4"][0:456])
+#ch2ind = np.array(bxr_data.data["3BRecInfo/3BMeaStreams/Raw/V4"][0:456])
 
 n_rec_frames_float = int(rec_dur) * int(SaRa)
 n_rec_frames = np.ones(shape=(1,), dtype="i8")
@@ -254,7 +254,7 @@ with h5py.File("TS2bxr.bxr", "w") as f:
     rec_info_mea_info_syschs = rec_info_mea_chip.create_dataset("SysChs", data=sys_chs)
 
     rec_info_mea_streams_raw = rec_info_mea_streams.create_group("Raw")
-    rec_info_mea_streams_raw_chs = rec_info_mea_streams_raw.create_dataset("V4", data=ch2ind)
+    rec_info_mea_streams_raw_chs = rec_info_mea_streams_raw.create_dataset("Chs", data=sys_chs)
 
     rec_info_mea_systems_fwversion = rec_info_mea_systems.create_dataset("FwVersion", (1,), dtype='|V16')
     rec_info_mea_systems_hwversion = rec_info_mea_systems.create_dataset("HwVersion", (1,), dtype='|V16')
