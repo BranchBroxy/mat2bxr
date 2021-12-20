@@ -114,21 +114,26 @@ V8 = np.dtype([('Row', '<i2'), ('Col', '<i2'), ('ID','>i4')])
 V16_2 = np.dtype([('Title', h5py.special_dtype(vlen=str)), ('Value', h5py.special_dtype(vlen=str))])
 V92 = np.dtype({'names':['Type', 'Name', 'Color', 'ZOrder', 'IsVisible', 'Opacity', 'Data', 'Transform', 'Mask', 'IsMaskDisabled'],
                 'formats':['<i4',
-                            'O',
+                            h5py.special_dtype(vlen=str),
                             [('KnownColor', '<i4'), ('Alpha', 'u1'), ('Red', 'u1'), ('Green', 'u1'), ('Blue', 'u1')],
                             '<i4',
                             'u1',
                             '<f4',
-                            'O',
+                            h5py.special_dtype(vlen=str),
                             [('m11', '<f4'), ('m12', '<f4'), ('m21', '<f4'), ('m22', '<f4'), ('dx', '<f4'), ('dy', '<f4')],
-                            'O',
+                            h5py.special_dtype(vlen=str),
                             'u1'],
                 'offsets':[0,4,12,20,24,28,32,48,72,88],
                 'itemsize':92})
+
+V24 = np.dtype([('StartFrame', '<i8'), ('EndFrame', '<i8'), ('FrameRate', '<f8')])
+
 V36 = np.dtype({'names':['Name','Color','IsVisible','Intervals'],
-                'formats':['O',[('KnownColor', '<i4'), ('Alpha', 'u1'), ('Red', 'u1'), ('Green', 'u1'), ('Blue', 'u1')],'u1','O'],
+                'formats':[h5py.special_dtype(vlen=str),[('KnownColor', '<i4'), ('Alpha', 'u1'), ('Red', 'u1'), ('Green', 'u1'), ('Blue', 'u1')],'u1',h5py.special_dtype(vlen=V24)],
                 'offsets':[0,8,16,20],
-                'itemsize':36})
+                'itemsize':36}) #36
+
+
 ############
 #   Data   #
 ############
@@ -139,15 +144,15 @@ mea_layout = np.ones(shape=(8, 8))
 mea_type = 1024
 mea_ncols = 64
 mea_nrows = 64
+ROIs = np.empty(shape=(0,), dtype=V52)
 sys_chs = np.ones(shape=(1, 1), dtype=V4)
 
-# 3BRecInfo/3BMeaStreams/Raw/V4
-#raw_chs = np.array(bxr_data.data['3BRecInfo/3BMeaStreams/Raw/V4'])
+# 3BRecInfo/3BMeaStreams/Raw/Chs
+Chs = np.array(bxr_data.data['3BRecInfo/3BMeaStreams/Raw/Chs'])
 
 # 3BRecInfo/3BMeaSystem
-# @TODO: Bug in FwVersion and HwVersion
-FwVersion = np.array((0, 0, 0, 0), dtype=V16)
-HwVersion = np.array((0, 0, -1, -1), dtype=V16)
+FwVersion = np.array([(0, 0, 0, 0)], dtype=V16)
+HwVersion = np.array([(0, 0, -1, -1)], dtype=V16)
 System = np.array(([1]), dtype=np.int32)
 
 # 3BRecInfo/3BRecVars
@@ -156,6 +161,9 @@ ExperimentType = np.array([0], dtype=np.int32)
 # @TODO: Check max and min Volt
 MaxVolt = amp.max()
 MinVolt = amp.min()
+n_rec_frames_float = int(rec_dur) * int(SaRa)
+n_rec_frames = np.ones(shape=(1,), dtype="i8")
+n_rec_frames[0] = n_rec_frames_float
 SamplingRate = np.ones(shape=(1,), dtype="f8")
 SamplingRate[0] = SaRa
 SignalInversion = np.array([1], dtype=np.float64)
@@ -205,7 +213,9 @@ ChsGroups = np.array([(b'Group 1', (0, 255, 0, 255, 255), np.array([(20, 31), (2
 ExpMarkers = np.empty(shape=(0,))
 ExpNotes = np.empty(shape=(0,), dtype=V16_2)
 MeaLayersInfo = np.empty(shape=(0,), dtype=V92)
-TimeIntervals = np.empty(shape=(1,), dtype=V36)
+TimeIntervals = np.array([(b'Basal', (99, 255, 32, 178, 170), 1, np.array([(0, 542600, 9043.33729749)],
+      dtype=V24))], dtype=V36)
+
 
 ###############
 # End of Data #
@@ -213,9 +223,7 @@ TimeIntervals = np.empty(shape=(1,), dtype=V36)
 
 #ch2ind = np.array(bxr_data.data["3BRecInfo/3BMeaStreams/Raw/V4"][0:456])
 
-n_rec_frames_float = int(rec_dur) * int(SaRa)
-n_rec_frames = np.ones(shape=(1,), dtype="i8")
-n_rec_frames[0] = n_rec_frames_float
+
 # n_rec_frames = np.array([n_rec_frames], dtype=[('T','<i8')])
 
 Cluster = np.array([(b'Group 1', (0, 255, 0, 255, 255), np.array([(20, 31), (20, 32), (20, 33), (21, 30), (21, 31), (21, 32),
@@ -250,27 +258,27 @@ with h5py.File("TS2bxr.bxr", "w") as f:
     rec_info_mea_info_meatype = rec_info_mea_chip.create_dataset("MeaType", data=mea_type, dtype='i4')
     rec_info_mea_info_ncols = rec_info_mea_chip.create_dataset("NCols", data=mea_ncols, dtype='u4')
     rec_info_mea_info_nrows = rec_info_mea_chip.create_dataset("NRows", data=mea_nrows, dtype='u4')
-    rec_info_mea_info_rois = rec_info_mea_chip.create_dataset("ROIs", (0,), dtype='|V52')
+    rec_info_mea_info_rois = rec_info_mea_chip.create_dataset("ROIs", data=ROIs)
     rec_info_mea_info_syschs = rec_info_mea_chip.create_dataset("SysChs", data=sys_chs)
 
     rec_info_mea_streams_raw = rec_info_mea_streams.create_group("Raw")
-    rec_info_mea_streams_raw_chs = rec_info_mea_streams_raw.create_dataset("Chs", data=sys_chs)
+    rec_info_mea_streams_raw_chs = rec_info_mea_streams_raw.create_dataset("Chs", data=Chs)
 
-    rec_info_mea_systems_fwversion = rec_info_mea_systems.create_dataset("FwVersion", (1,), dtype='|V16')
-    rec_info_mea_systems_hwversion = rec_info_mea_systems.create_dataset("HwVersion", (1,), dtype='|V16')
-    rec_info_mea_systems_system = rec_info_mea_systems.create_dataset("System", (1,), dtype='i4')
+    rec_info_mea_systems_fwversion = rec_info_mea_systems.create_dataset("FwVersion", data=FwVersion)
+    rec_info_mea_systems_hwversion = rec_info_mea_systems.create_dataset("HwVersion", data=HwVersion)
+    rec_info_mea_systems_system = rec_info_mea_systems.create_dataset("System", data=System)
 
-    rec_info_mea_vars_bitdepth = rec_info_rec_vars.create_dataset("BitDepth", (1,), dtype='|u1')
-    rec_info_mea_vars_experimenttype = rec_info_rec_vars.create_dataset("ExperimentType", (1,), dtype='i4')
-    rec_info_mea_vars_maxvolt = rec_info_rec_vars.create_dataset("MaxVolt", (1,), dtype='f8')
-    rec_info_mea_vars_mivolt = rec_info_rec_vars.create_dataset("MinVolt", (1,), dtype='f8')
+    rec_info_mea_vars_bitdepth = rec_info_rec_vars.create_dataset("BitDepth", data=BitDepth)
+    rec_info_mea_vars_experimenttype = rec_info_rec_vars.create_dataset("ExperimentType", data=ExperimentType)
+    rec_info_mea_vars_maxvolt = rec_info_rec_vars.create_dataset("MaxVolt", data=MaxVolt)
+    rec_info_mea_vars_mivolt = rec_info_rec_vars.create_dataset("MinVolt", data=MinVolt)
     rec_info_mea_vars_nrecframes = rec_info_rec_vars.create_dataset("NRecFrames", data=n_rec_frames)
     rec_info_mea_vars_samplingrate = rec_info_rec_vars.create_dataset("SamplingRate", data=SamplingRate, dtype='f8')
-    rec_info_mea_vars_signalinversion = rec_info_rec_vars.create_dataset("SignalInversion", (1,), dtype='f8')
+    rec_info_mea_vars_signalinversion = rec_info_rec_vars.create_dataset("SignalInversion", data=SignalInversion)
 
-    rec_info_mea_source_info_format = rec_info_source_info.create_dataset("Format", (), dtype='i4')
-    rec_info_mea_source_info_guid = rec_info_source_info.create_dataset("GUID", (), dtype='|S36')
-    rec_info_mea_source_info_path = rec_info_source_info.create_dataset("Path", (), dtype='|S18')
+    rec_info_mea_source_info_format = rec_info_source_info.create_dataset("Format", data=Format)
+    rec_info_mea_source_info_guid = rec_info_source_info.create_dataset("GUID", data=GUID)
+    rec_info_mea_source_info_path = rec_info_source_info.create_dataset("Path", data=Path)
 
     #########################################################
     ####################3BResults############################
@@ -278,35 +286,35 @@ with h5py.File("TS2bxr.bxr", "w") as f:
 
     results_ch_events = results_grp.create_group("3BChEvents")
     results_info = results_grp.create_group("3BInfo")
-    results_ch_events_lfp_ch_ids = results_ch_events.create_dataset("LfpChIDs", data=vec2)
-    results_ch_events_lfp_forms = results_ch_events.create_dataset("LfpForms", (47339721,), dtype='i2')
-    results_ch_events_lfp_LfpTimes = results_ch_events.create_dataset("LfpTimes", data=vec1)
+    results_ch_events_lfp_ch_ids = results_ch_events.create_dataset("LfpChIDs", data=LfpChIDs)
+    results_ch_events_lfp_forms = results_ch_events.create_dataset("LfpForms", data=LfpForms)
+    results_ch_events_lfp_LfpTimes = results_ch_events.create_dataset("LfpTimes", data=LfpTimes)
 
     results_info_lfps = results_info.create_group("3BLFPs")
 
-    results_info_lfps_ch_ids_2_nl_fps = results_info_lfps.create_dataset("ChIDs2NLfps", (4096,), dtype='i4')
-    results_info_lfps_params = results_info_lfps.create_dataset("Params", (4096,), dtype='|V28')
+    results_info_lfps_ch_ids_2_nl_fps = results_info_lfps.create_dataset("ChIDs2NLfps", data=ChIDs2NLfps)
+    results_info_lfps_params = results_info_lfps.create_dataset("Params", data=Params)
 
     results_info_noise = results_info.create_group("3BNoise")
 
-    results_info_noise_std_mean = results_info_noise.create_dataset("StdMean", (4090,), dtype='|V12')
-    results_info_noise_valid_chs = results_info_noise.create_dataset("ValidChs", (4090,), dtype='|V4')
+    results_info_noise_std_mean = results_info_noise.create_dataset("StdMean", data=StdMean)
+    results_info_noise_valid_chs = results_info_noise.create_dataset("ValidChs", data=ValidChs)
 
-    results_info_cd_ids_2_labels = results_info.create_dataset("ChIDs2Labels", (4096,), dtype='|V12') # change so it runs normally: |O
+    results_info_cd_ids_2_labels = results_info.create_dataset("ChIDs2Labels", data=ChIDs2Labels) # change so it runs normally: |O
 
-    results_info_mea_chs_2_cd_ids_matrix = results_info.create_dataset("MeaChs2ChIDsMatrix", (64, 64), dtype='i4')
+    results_info_mea_chs_2_cd_ids_matrix = results_info.create_dataset("MeaChs2ChIDsMatrix", data=MeaChs2ChIDsMatrix)
 
-    results_info_mea_chs_2_cd_ids_matrix = results_info.create_dataset("MeaChs2ChIDsVector", (4090,), dtype='|V8')
+    results_info_mea_chs_2_cd_ids_matrix = results_info.create_dataset("MeaChs2ChIDsVector", data=MeaChs2ChIDsVector)
 
     #########################################################
     ####################3BUserInfo###########################
     #########################################################
 
-    user_info_ch_groups = user_info_grp.create_dataset("ChsGroups", data=Cluster) #'|V52'
-    user_info_exp_markers = user_info_grp.create_dataset("ExpMarkers", (0,), dtype='|V36')
-    user_info_exp_notes = user_info_grp.create_dataset("ExpNotes", (1,), dtype='|V16')
-    user_info_mea_layers_info = user_info_grp.create_dataset("MeaLayersInfo", (0,), dtype='|V92')
-    user_info_time_intervals = user_info_grp.create_dataset("TimeIntervals", (1,), dtype='|V36')
+    user_info_ch_groups = user_info_grp.create_dataset("ChsGroups", data=ChsGroups) #'|V52'
+    user_info_exp_markers = user_info_grp.create_dataset("ExpMarkers", data=ExpMarkers)
+    user_info_exp_notes = user_info_grp.create_dataset("ExpNotes", data=ExpNotes)
+    user_info_mea_layers_info = user_info_grp.create_dataset("MeaLayersInfo", data=MeaLayersInfo)
+    user_info_time_intervals = user_info_grp.create_dataset("TimeIntervals", data=TimeIntervals)
 
     #########################################################
     #######################Writing###########################
