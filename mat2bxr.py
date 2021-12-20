@@ -105,6 +105,18 @@ n_rec_frames = np.ones(shape=(1,), dtype="i8")
 n_rec_frames[0] = n_rec_frames_float
 # n_rec_frames = np.array([n_rec_frames], dtype=[('T','<i8')])
 
+#Data Types
+Chs = np.dtype([('Row', '<i2'), ('Col', '<i2')])
+dt_int32 = np.dtype(np.int32)
+dt = np.dtype({'names': ['Name','Color','Chs','IsVisible','Units'],
+               'formats': [h5py.special_dtype(vlen=str),
+                          [('KnownColor', '<i4'), ('Alpha', 'u1'), ('Red', 'u1'), ('Green', 'u1'), ('Blue', 'u1')],
+                          h5py.special_dtype(vlen=Chs),
+                          'u1',
+                          h5py.special_dtype(vlen=dt_int32)],
+               'offsets': [0,8,16,32,36],
+               'itemsize': 52})
+
 with h5py.File("TS2bxr.bxr", "w") as f:
     rec_info_grp = f.create_group("3BRecInfo")
     results_grp = f.create_group("3BResults")
